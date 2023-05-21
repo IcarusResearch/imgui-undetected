@@ -706,8 +706,6 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
 
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("[", "]");
     RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
 
     // Automatically close popups
@@ -1143,8 +1141,6 @@ bool ImGui::Checkbox(const char* label, bool* v)
     }
 
     ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
-    if (g.LogEnabled)
-        LogRenderedText(&label_pos, mixed_value ? "[~]" : *v ? "[x]" : "[ ]");
     if (label_size.x > 0.0f)
         RenderText(label_pos, label);
 
@@ -1245,8 +1241,6 @@ bool ImGui::RadioButton(const char* label, bool active)
     }
 
     ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
-    if (g.LogEnabled)
-        LogRenderedText(&label_pos, active ? "(x)" : "( )");
     if (label_size.x > 0.0f)
         RenderText(label_pos, label);
 
@@ -1407,8 +1401,6 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
 
         // Draw
         window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Separator));
-        if (g.LogEnabled)
-            LogText(" |");
     }
     else if (flags & ImGuiSeparatorFlags_Horizontal)
     {
@@ -1442,8 +1434,6 @@ void ImGui::SeparatorEx(ImGuiSeparatorFlags flags)
         {
             // Draw
             window->DrawList->AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Separator));
-            if (g.LogEnabled)
-                LogRenderedText(&bb.Min, "--------------------------------\n");
 
         }
         if (columns)
@@ -1504,14 +1494,10 @@ void ImGui::SeparatorTextEx(ImGuiID id, const char* label, const char* label_end
             window->DrawList->AddLine(ImVec2(sep1_x1, seps_y), ImVec2(sep1_x2, seps_y), separator_col, separator_thickness);
         if (sep2_x2 > sep2_x1 && separator_thickness > 0.0f)
             window->DrawList->AddLine(ImVec2(sep2_x1, seps_y), ImVec2(sep2_x2, seps_y), separator_col, separator_thickness);
-        if (g.LogEnabled)
-            LogSetNextTextDecoration("---", NULL);
         RenderTextEllipsis(window->DrawList, label_pos, ImVec2(bb.Max.x, bb.Max.y + style.ItemSpacing.y), bb.Max.x, bb.Max.x, label, label_end, &label_size);
     }
     else
     {
-        if (g.LogEnabled)
-            LogText("---");
         if (separator_thickness > 0.0f)
             window->DrawList->AddLine(ImVec2(sep1_x1, seps_y), ImVec2(sep2_x2, seps_y), separator_col, separator_thickness);
     }
@@ -1723,8 +1709,6 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     // Render preview and label
     if (preview_value != NULL && !(flags & ImGuiComboFlags_NoPreview))
     {
-        if (g.LogEnabled)
-            LogSetNextTextDecoration("{", "}");
         RenderTextClipped(bb.Min + style.FramePadding, ImVec2(value_x2, bb.Max.y), preview_value, NULL, NULL);
     }
     if (label_size.x > 0)
@@ -1915,7 +1899,7 @@ bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(voi
         const bool item_selected = (i == *current_item);
         const char* item_text;
         if (!items_getter(data, i, &item_text))
-            item_text = "*Unknown item*";
+            item_text = "";
         if (Selectable(item_text, item_selected))
         {
             value_changed = true;
@@ -2455,8 +2439,6 @@ bool ImGui::DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
 
     if (label_size.x > 0.0f)
@@ -3043,8 +3025,6 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
 
     if (label_size.x > 0.0f)
@@ -4905,7 +4885,6 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     // Log as text
     if (g.LogEnabled && (!is_password || is_displaying_hint))
     {
-        LogSetNextTextDecoration("{", "}");
         LogRenderedText(&draw_pos, buf_display, buf_display_end);
     }
 
@@ -6596,7 +6575,7 @@ bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(v
         {
             const char* item_text;
             if (!items_getter(data, i, &item_text))
-                item_text = "*Unknown item*";
+                item_text = "";
 
             PushID(i);
             const bool item_selected = (i == *current_item);
@@ -7839,7 +7818,7 @@ ImGuiTabItem* ImGui::TabBarGetCurrentTab(ImGuiTabBar* tab_bar)
 const char* ImGui::TabBarGetTabName(ImGuiTabBar* tab_bar, ImGuiTabItem* tab)
 {
     if (tab->NameOffset == -1)
-        return "N/A";
+        return "";
     IM_ASSERT(tab->NameOffset < tab_bar->TabsNames.Buf.Size);
     return tab_bar->TabsNames.Buf.Data + tab->NameOffset;
 }
